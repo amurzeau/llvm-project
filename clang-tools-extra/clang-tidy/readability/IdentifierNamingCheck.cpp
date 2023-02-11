@@ -324,13 +324,25 @@ std::string IdentifierNamingCheck::HungarianNotation::getDeclTypeName(
 
     static constexpr StringRef Keywords[] = {
         // Constexpr specifiers
-        "constexpr", "constinit", "consteval",
+        "constexpr",
+        "constinit",
+        "consteval",
         // Qualifier
-        "const", "volatile", "restrict", "mutable",
+        "const",
+        "volatile",
+        "restrict",
+        "mutable",
         // Storage class specifiers
-        "register", "static", "extern", "thread_local",
+        "register",
+        "static",
+        "extern",
+        "thread_local",
         // Other keywords
-        "virtual"};
+        "virtual",
+        // C keywords
+        "struct",
+        "enum",
+    };
 
     // Remove keywords
     for (StringRef Kw : Keywords) {
