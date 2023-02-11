@@ -189,42 +189,6 @@ static StringRef const HungarainNotationPrimitiveTypes[] = {
 #undef STRINGIZE
 };
 
-#define HUNGARIAN_NOTATION_USER_DEFINED_TYPES(m) \
-     m(BOOL) \
-     m(BOOLEAN) \
-     m(BYTE) \
-     m(CHAR) \
-     m(UCHAR) \
-     m(SHORT) \
-     m(USHORT) \
-     m(WORD) \
-     m(DWORD) \
-     m(DWORD32) \
-     m(DWORD64) \
-     m(LONG) \
-     m(ULONG) \
-     m(ULONG32) \
-     m(ULONG64) \
-     m(ULONGLONG) \
-     m(HANDLE) \
-     m(INT) \
-     m(INT8) \
-     m(INT16) \
-     m(INT32) \
-     m(INT64) \
-     m(UINT) \
-     m(UINT8) \
-     m(UINT16) \
-     m(UINT32) \
-     m(UINT64) \
-     m(PVOID) \
-
-static StringRef const HungarainNotationUserDefinedTypes[] = {
-#define STRINGIZE(v) #v,
-  HUNGARIAN_NOTATION_USER_DEFINED_TYPES(STRINGIZE)
-#undef STRINGIZE
-};
-
 
 #undef NAMING_KEYS
 // clang-format on
@@ -502,12 +466,15 @@ void IdentifierNamingCheck::HungarianNotation::loadFileConfig(
 
   Buffer = {Section, "UserDefinedType."};
   DefSize = Buffer.size();
-  for (const auto &Type : HungarainNotationUserDefinedTypes) {
-    Buffer.truncate(DefSize);
-    Buffer.append(Type);
-    StringRef Val = Options.get(Buffer, "");
-    if (!Val.empty())
-      HNOption.UserDefinedType[Type] = Val.str();
+  llvm::StringMap<StringRef> UserDefinedType = Options.getAllOptions(Buffer);
+  for (const auto &PrimType : UserDefinedType) {
+    StringRef Val = PrimType.getValue();
+    StringRef Key = PrimType.getKey();
+    if (!Val.empty()) {
+      if (Key.consume_front(Buffer)) {
+        HNOption.UserDefinedType[Key.str()] = Val.str();
+      }
+    }
   }
 }
 
