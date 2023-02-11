@@ -13,6 +13,7 @@
 #include "ClangTidyOptions.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/Basic/Diagnostic.h"
+#include "llvm/ADT/StringMap.h"
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -149,6 +150,13 @@ public:
     OptionsView(StringRef CheckName,
                 const ClangTidyOptions::OptionMap &CheckOptions,
                 ClangTidyContext *Context);
+
+    /// Retrieve all options with a given prefix from the ``Context``.
+    ///
+    /// Retrieves all options with the check-local prefix \p LocalNamePrefix
+    /// from the
+    /// ``CheckOptions``. Returned keys are local names.
+    llvm::StringMap<StringRef> getAllOptions(StringRef LocalNamePrefix) const;
 
     /// Read a named option from the ``Context``.
     ///

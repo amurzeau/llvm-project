@@ -51,6 +51,27 @@ ClangTidyCheck::OptionsView::OptionsView(
     : NamePrefix((CheckName + ".").str()), CheckOptions(CheckOptions),
       Context(Context) {}
 
+llvm::StringMap<StringRef>
+ClangTidyCheck::OptionsView::getAllOptions(StringRef LocalNamePrefix) const {
+  auto FullNamePrefix = (NamePrefix + LocalNamePrefix).str();
+  llvm::StringMap<StringRef> FoundOptions;
+
+  for (const auto &Option : CheckOptions) {
+    StringRef Key = Option.getKey();
+    if (Key.starts_with(FullNamePrefix)) {
+      if (Context->getOptionsCollector())
+        Context->getOptionsCollector()->insert(Option);
+      auto IterFound = FoundOptions.find(Key);
+      if (IterFound == FoundOptions.end()) {
+        Key.consume_front(NamePrefix);
+        FoundOptions[Key] = Option.getValue().Value;
+      }
+    }
+  }
+
+  return FoundOptions;
+}
+
 std::optional<StringRef>
 ClangTidyCheck::OptionsView::get(StringRef LocalName) const {
   if (Context->getOptionsCollector())
