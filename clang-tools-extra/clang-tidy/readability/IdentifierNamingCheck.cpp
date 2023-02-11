@@ -446,8 +446,8 @@ void IdentifierNamingCheck::HungarianNotation::loadFileConfig(
     IdentifierNamingCheck::HungarianNotationOption &HNOption) const {
 
   static constexpr StringRef HNOpts[] = {"TreatStructAsClass"};
-  static constexpr StringRef HNDerivedTypes[] = {"Array", "Pointer",
-                                                 "FunctionPointer"};
+  static constexpr StringRef HNDerivedTypes[] = {
+      "Array", "Pointer", "FunctionPointer", "Enum", "Other"};
 
   StringRef Section = "HungarianNotation.";
 
@@ -564,6 +564,7 @@ std::string IdentifierNamingCheck::HungarianNotation::getDataTypePrefix(
     return TypeName.str();
 
   std::string ModifiedTypeName(TypeName);
+  bool IsEnum = false;
 
   // Derived types
   std::string PrefixStr;
@@ -595,6 +596,8 @@ std::string IdentifierNamingCheck::HungarianNotation::getDataTypePrefix(
       size_t Pos = ModifiedTypeName.find_last_of("&");
       if (Pos != std::string::npos)
         ModifiedTypeName = ModifiedTypeName.substr(0, Pos);
+    } else if (QT->isEnumeralType()) {
+      IsEnum = true;
     }
   }
 
@@ -639,6 +642,12 @@ std::string IdentifierNamingCheck::HungarianNotation::getDataTypePrefix(
       }
     }
   }
+
+  if (PrefixStr.empty() && IsEnum)
+    PrefixStr = HNOption.DerivedType.lookup("Enum");
+
+  if (PrefixStr.empty())
+    PrefixStr = HNOption.DerivedType.lookup("Other");
 
   for (size_t Idx = 0; Idx < PtrCount; Idx++)
     PrefixStr.insert(0, HNOption.DerivedType.lookup("Pointer"));
