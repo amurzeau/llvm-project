@@ -564,7 +564,17 @@ std::string IdentifierNamingCheck::HungarianNotation::getDataTypePrefix(
     return TypeName.str();
 
   std::string ModifiedTypeName(TypeName);
+  bool IsArray = false;
   bool IsEnum = false;
+
+  auto ReplaceString = [](std::string Str, StringRef From, StringRef To) {
+    size_t StartPos = 0;
+    while ((StartPos = Str.find(From.data(), StartPos)) != std::string::npos) {
+      Str.replace(StartPos, From.size(), To.data());
+      StartPos += To.size();
+    }
+    return Str;
+  };
 
   // Derived types
   std::string PrefixStr;
@@ -590,8 +600,10 @@ std::string IdentifierNamingCheck::HungarianNotation::getDataTypePrefix(
           break;
         }
       }
-      if (PrefixStr.empty())
-        PrefixStr = HNOption.DerivedType.lookup("Array");
+      if (PrefixStr.empty()) {
+        IsArray = true;
+        ModifiedTypeName = ReplaceString(ModifiedTypeName, "[]", "");
+      }
     } else if (QT->isReferenceType()) {
       size_t Pos = ModifiedTypeName.find_last_of("&");
       if (Pos != std::string::npos)
@@ -612,15 +624,7 @@ std::string IdentifierNamingCheck::HungarianNotation::getDataTypePrefix(
     return Count;
   }(ModifiedTypeName);
   if (PtrCount > 0) {
-    ModifiedTypeName = [&](std::string Str, StringRef From, StringRef To) {
-      size_t StartPos = 0;
-      while ((StartPos = Str.find(From.data(), StartPos)) !=
-             std::string::npos) {
-        Str.replace(StartPos, From.size(), To.data());
-        StartPos += To.size();
-      }
-      return Str;
-    }(ModifiedTypeName, "*", "");
+    ModifiedTypeName = ReplaceString(ModifiedTypeName, "*", "");
   }
 
   // Primitive types
@@ -649,8 +653,13 @@ std::string IdentifierNamingCheck::HungarianNotation::getDataTypePrefix(
   if (PrefixStr.empty())
     PrefixStr = HNOption.DerivedType.lookup("Other");
 
+  // Add pointers prefixes
   for (size_t Idx = 0; Idx < PtrCount; Idx++)
     PrefixStr.insert(0, HNOption.DerivedType.lookup("Pointer"));
+
+  // Add array prefix
+  if (IsArray)
+    PrefixStr.insert(0, HNOption.DerivedType.lookup("Array"));
 
   return PrefixStr;
 }
