@@ -108,7 +108,7 @@ class CheckRunner:
     # auto-detection logic can discover a ".clang-tidy" file that is not related to
     # the test.
     if not any(
-        [arg.startswith('-config=') for arg in self.clang_tidy_extra_args]):
+        [arg.startswith('-config=') or arg.startswith('-config-file=') for arg in self.clang_tidy_extra_args]):
       self.clang_tidy_extra_args.append('-config={}')
 
     if extension in ['.m', '.mm']:
